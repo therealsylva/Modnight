@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ModNight Installer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@tauri-apps/api@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #050505;
+      --bg: #0a0a0a;
+      --bg-elevated: #141414;
+      --fg: #E5E5E5;
+      --fg-muted: #888888;
+      --accent: #E5E5E5;
+      --accent-dim: rgba(229, 229, 229, 0.15);
+      --border: #2a2a2a;
+      --error: #ff4d6a;
+      --card: #0a0a0a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(145deg, #0a0a0a 0%, #050505 50%, #080808 100%);
+      color: var(--fg);
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Window chrome */
+    .window {
+      background: linear-gradient(180deg, #151515 0%, #0a0a0a 50%, #0d0d0d 100%);
+      border: 1px solid #222;
+      border-radius: 12px;
+      box-shadow: 
+        0 25px 50px -12px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 1px 0 rgba(255,255,255,0.05) inset;
+      overflow: hidden;
+    }
+
+    .window-header {
+      background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+      border-bottom: 1px solid #222;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .window-btn:hover {
+      transform: scale(1.15);
+      filter: brightness(1.2);
+    }
+
+    .window-btn.close { background: #ff5f57; }
+    .window-btn.minimize { background: #febc2e; }
+    .window-btn.maximize { background: #28c840; }
+
+    /* Steps indicator */
+    .steps {
+      display: flex;
+      gap: 0;
+      padding: 24px 32px;
+      background: linear-gradient(180deg, #141414 0%, #101010 100%);
+      border-bottom: 1px solid #222;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      width: 16px;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      background: linear-gradient(145deg, #151515, #0a0a0a);
+      border: 1px solid #2a2a2a;
+      color: var(--fg-muted);
+      transition: all 0.3s ease;
+    }
+
+    .step.active .step-num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    .step.completed .step-num {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Content panels */
+    .panel-container {
+      position: relative;
+      height: 320px;
+      overflow: hidden;
+    }
+
+    .panel {
+      position: absolute;
+      inset: 0;
+      padding: 32px;
+      opacity: 0;
+      transform: translateX(30px);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .panel.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .panel.exit {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    /* Typography */
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--fg-muted);
+      font-size: 14px;
+      margin: 0 0 28px 0;
+    }
+
+    /* Form elements */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+      margin-bottom: 8px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: linear-gradient(180deg, #080808 0%, #0a0a0a 100%);
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: var(--fg);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      transition: border-color 0.2s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .input-field::placeholder {
+      color: var(--fg-muted);
+    }
+
+    .path-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .browse-btn {
+      padding: 12px 18px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .browse-btn:hover {
+      background: #252527;
+      border-color: #3D3D3D;
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-item:hover .checkbox-box {
+      border-color: #3D3D3D;
+    }
+
+    .checkbox-item input:checked + .checkbox-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-item input:checked + .checkbox-box svg {
+      opacity: 1;
+    }
+
+    .checkbox-box svg {
+      width: 12px;
+      height: 12px;
+      stroke: #000;
+      stroke-width: 3;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .checkbox-item input:checked + .checkbox-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-item input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .checkbox-label {
+      font-size: 14px;
+      color: var(--fg);
+    }
+
+    .checkbox-hint {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-top: 2px;
+    }
+
+    /* License text */
+    .license-box {
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      height: 140px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.7;
+      color: var(--fg-muted);
+      margin-bottom: 20px;
+    }
+
+    .license-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .license-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .license-box::-webkit-scrollbar-thumb {
+      background: #3D3D3D;
+      border-radius: 3px;
+    }
+
+    /* Progress */
+    .progress-section {
+      margin-top: 24px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .progress-label {
+      font-size: 13px;
+      color: var(--fg);
+    }
+
+    .progress-percent {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--bg-deep);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-file {
+      margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--fg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Complete screen */
+    .complete-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--accent-dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .complete-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 20px 32px;
+      background: linear-gradient(180deg, #101010 0%, #141414 100%);
+      border-top: 1px solid #222;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+    }
+
+    .btn-secondary:hover {
+      border-color: #3D3D3D;
+      color: var(--fg);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%);
+      color: #000;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    /* File list */
+    .file-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      background: linear-gradient(180deg, #0d0d0d 0%, #080808 100%);
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    /* Focus states */
+    .btn:focus-visible,
+    .browse-btn:focus-visible,
+    .checkbox-item:focus-within .checkbox-box {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Splash screen */
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="flex items-center justify-center min-h-screen p-4">
+    <div class="window" style="width: 580px;" role="dialog" aria-label="ModNight Installer">
+      <!-- Window Header -->
+      <header class="window-header">
+        <div class="flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span class="text-sm font-medium">ModNight Setup</span>
+          <span class="mono text-xs" style="color: var(--fg-muted)">v2.4.1</span>
+        </div>
+        <div class="window-controls">
+          <button class="window-btn minimize" aria-label="Minimize" tabindex="-1"></button>
+          <button class="window-btn maximize" aria-label="Maximize" tabindex="-1"></button>
+          <button class="window-btn close" aria-label="Close" tabindex="-1"></button>
+        </div>
+      </header>
+
+      <!-- Steps Indicator -->
+      <nav class="steps" aria-label="Installation progress">
+        <div class="step active" data-step="0">
+          <div class="step-num">1</div>
+        </div>
+        <div class="step" data-step="1">
+          <div class="step-num">2</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-num">3</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-num">4</div>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-num">5</div>
+        </div>
+        <div class="step" data-step="5">
+          <div class="step-num">6</div>
+        </div>
+      </nav>
+
+      <!-- Panel Container -->
+      <div class="panel-container">
+        <!-- Panel 0: Splash -->
+        <section class="panel active" data-panel="0">
+          <div class="splash-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
+            <div style="margin-bottom: 24px;">
+              <svg width="80" height="80" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="4" fill="#0a0a0a"/>
+                <g stroke="#FFFFFF" stroke-width="0.7" fill="none">
+                  <polygon points="16,4 26,9.5 16,15 6,9.5" />
+                  <polygon points="6,9.5 16,15 16,27 6,21.5" />
+                  <polygon points="26,9.5 16,15 16,27 26,21.5" />
+                  <line x1="16" y1="15" x2="10" y2="20"/>
+                  <line x1="16" y1="15" x2="22" y2="20"/>
+                  <line x1="16" y1="15" x2="16" y2="27"/>
+                </g>
+                <circle cx="16" cy="15" r="1.8" fill="#FFFFFF"/>
+                <circle cx="10" cy="20" r="1.4" fill="#FFFFFF"/>
+                <circle cx="22" cy="20" r="1.4" fill="#FFFFFF"/>
+              </svg>
+            </div>
+            <h2 style="font-size: 28px; margin-bottom: 8px;">ModNight</h2>
+            <p class="subtitle">ModNight Software and Plugin Installer</p>
+            <p class="mono" style="font-size: 12px; color: var(--fg-muted); margin-top: 40px;">Version 2.4.1</p>
+          </div>
+        </section>
+
+        <!-- Panel 1: Welcome -->
+        <section class="panel" data-panel="1">
+          <h2>Welcome to ModNight</h2>
+          <p class="subtitle">This will install ModNight Software Archive on your computer.</p>
+          
+          <div class="file-stats">
+            <div class="stat-box">
+              <div class="stat-value">847</div>
+              <div class="stat-label">Files to install</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">2.4</div>
+              <div class="stat-label">GB required</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">~2m</div>
+              <div class="stat-label">Est. time</div>
+            </div>
+          </div>
+
+          <div class="checkbox-group mt-6">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <div class="checkbox-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div>
+                <div class="checkbox-label">Create desktop shortcut</div>
+              </div>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox">
+              <div class="checkbox-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div>
+                <div class="checkbox-label">Add to system PATH</div>
+                <div class="checkbox-hint">Enables terminal access from anywhere</div>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <!-- Panel 3: License -->
+        <section class="panel" data-panel="2">
+          <h2>License Agreement</h2>
+          <p class="subtitle">Please read the license terms before installing.</p>
+          
+          <div class="license-box" tabindex="0">
+MIT License
+
+Copyright (c) 2024 ModNight Software
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+          </div>
+
+          <label class="checkbox-item">
+            <input type="checkbox" id="acceptLicense">
+            <div class="checkbox-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <div class="checkbox-label">I accept the license agreement</div>
+            </div>
+          </label>
+        </section>
+
+        <!-- Panel 4: Location -->
+        <section class="panel" data-panel="2">
+          <h2>Installation Location</h2>
+          <p class="subtitle">Choose where ModNight will be installed.</p>
+          
+          <div class="input-group">
+            <label class="input-label" for="installPath">Destination Folder</label>
+            <div class="path-row">
+              <input type="text" id="installPath" class="input-field" value="C:\Program Files\ModNight" readonly>
+              <button class="browse-btn" id="btnBrowse">Browse...</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Required Space</label>
+            <div class="flex items-center gap-4 mt-2">
+              <div class="flex-1">
+                <div class="h-2 rounded overflow-hidden" style="background: var(--bg-deep)">
+                  <div class="h-full" style="background: var(--accent); width: 28%"></div>
+                </div>
+              </div>
+              <span class="mono text-xs" style="color: var(--fg-muted)">2.4 GB / 120 GB free</span>
+            </div>
+          </div>
+
+          <div class="mt-6 p-4 rounded border" style="background: var(--bg-deep); border-color: var(--border)">
+            <div class="flex items-center gap-3">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span class="text-sm" style="color: var(--fg-muted)">Installation will require administrator privileges</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 5: Installing -->
+        <section class="panel" data-panel="3">
+          <h2>Installing ModNight</h2>
+          <p class="subtitle">Please wait while files are being copied.</p>
+          
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Extracting files...</span>
+              <span class="progress-percent" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-file" id="progressFile">Preparing installation...</div>
+          </div>
+
+          <div class="file-stats">
+            <div class="stat-box">
+              <div class="stat-value" id="filesCopied">0</div>
+              <div class="stat-label">Files copied</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="currentSpeed">0</div>
+              <div class="stat-label">MB/s</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="timeRemaining">--:--</div>
+              <div class="stat-label">Remaining</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 6: Complete -->
+        <section class="panel" data-panel="4">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="complete-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Installation Complete</h2>
+              <p class="subtitle mt-1 mb-0">ModNight has been successfully installed on your system.</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <div class="checkbox-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div>
+                <div class="checkbox-label">Launch ModNight now</div>
+              </div>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox">
+              <div class="checkbox-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div>
+                <div class="checkbox-label">View release notes</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="mt-6 p-4 rounded border" style="background: var(--bg-deep); border-color: var(--border)">
+            <p class="mono text-xs" style="color: var(--fg-muted)">
+              Installed to: C:\Program Files\ModNight<br>
+              Version: 2.4.1 (build 2024.12.15)
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Button Row -->
+      <footer class="btn-row">
+        <button class="btn btn-secondary" id="btnBack" style="visibility: hidden;">Back</button>
+        <button class="btn btn-primary" id="btnNext">Next</button>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    // State
+    let currentStep = 0;
+    const totalSteps = 6;
+    let isInstalling = false;
+
+    // Elements
+    const steps = document.querySelectorAll('.step');
+    const panels = document.querySelectorAll('.panel');
+    const btnBack = document.getElementById('btnBack');
+    const btnNext = document.getElementById('btnNext');
+    const acceptLicense = document.getElementById('acceptLicense');
+
+    // Sample file paths for simulation
+    const sampleFiles = [
+      'core/engine.dll',
+      'core/renderer.dll',
+      'modules/archive.dll',
+      'modules/compression.dll',
+      'ui/framework.dll',
+      'ui/themes/dark.theme',
+      'ui/themes/light.theme',
+      'plugins/validator.dll',
+      'plugins/converter.dll',
+      'resources/icons/default.png',
+      'resources/icons/archive.png',
+      'resources/locale/en_US.json',
+      'resources/locale/de_DE.json',
+      'config/default.cfg',
+      'config/security.cfg',
+      'tools/cli.exe',
+      'tools/daemon.exe',
+      'docs/manual.pdf',
+      'docs/api/index.html',
+    ];
+
+    // Update step indicators
+    function updateSteps() {
+      steps.forEach((step, i) => {
+        step.classList.remove('active', 'completed');
+        if (i < currentStep) {
+          step.classList.add('completed');
+        } else if (i === currentStep) {
+          step.classList.add('active');
+        }
+      });
+    }
+
+    // Update panels
+    function updatePanels() {
+      panels.forEach((panel, i) => {
+        panel.classList.remove('active', 'exit');
+        if (i === currentStep) {
+          panel.classList.add('active');
+        } else if (i < currentStep) {
+          panel.classList.add('exit');
+        }
+      });
+    }
+
+    // Update buttons
+    function updateButtons() {
+      btnBack.style.visibility = currentStep > 0 && currentStep < totalSteps - 1 ? 'visible' : 'hidden';
+      
+      if (currentStep === 0) {
+        btnNext.textContent = 'Next';
+        btnNext.disabled = false;
+      } else if (currentStep === 1) {
+        btnNext.textContent = 'Next';
+        btnNext.disabled = false;
+      } else if (currentStep === 2) {
+        btnNext.textContent = 'Next';
+        btnNext.disabled = !acceptLicense.checked;
+      } else if (currentStep === 3) {
+        btnNext.textContent = 'Install';
+        btnNext.disabled = false;
+      } else if (currentStep === 4) {
+        btnNext.textContent = 'Installing...';
+        btnNext.disabled = true;
+      } else if (currentStep === 5) {
+        btnNext.textContent = 'Finish';
+        btnNext.disabled = false;
+      }
+    }
+
+    // Simulate installation
+    function simulateInstallation() {
+      if (isInstalling) return;
+      isInstalling = true;
+
+      const progressFill = document.getElementById('progressFill');
+      const progressPercent = document.getElementById('progressPercent');
+      const progressFile = document.getElementById('progressFile');
+      const filesCopied = document.getElementById('filesCopied');
+      const currentSpeed = document.getElementById('currentSpeed');
+      const timeRemaining = document.getElementById('timeRemaining');
+
+      let progress = 0;
+      let fileIndex = 0;
+      const totalFiles = 847;
+
+      const interval = setInterval(() => {
+        progress += Math.random() * 3 + 1;
+        if (progress > 100) progress = 100;
+
+        progressFill.style.width = progress + '%';
+        progressPercent.textContent = Math.round(progress) + '%';
+
+        // Update file
+        fileIndex = Math.floor((progress / 100) * totalFiles);
+        filesCopied.textContent = fileIndex;
+        
+        // Random speed
+        const speed = Math.floor(Math.random() * 80 + 40);
+        currentSpeed.textContent = speed;
+
+        // Time remaining
+        const remaining = Math.ceil((100 - progress) / 3);
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        timeRemaining.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // Current file
+        const fileName = sampleFiles[Math.floor(Math.random() * sampleFiles.length)];
+        progressFile.textContent = `Copying: ${fileName}`;
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          progressFile.textContent = 'Installation complete!';
+          isInstalling = false;
+          
+          setTimeout(() => {
+            currentStep++;
+            updateSteps();
+            updatePanels();
+            updateButtons();
+          }, 500);
+        }
+      }, 100);
+    }
+
+    // Navigation
+    function goNext() {
+      if (currentStep === 3) {
+        currentStep++;
+        updateSteps();
+        updatePanels();
+        updateButtons();
+        simulateInstallation();
+      } else if (currentStep === 5) {
+        alert('Installer would close and optionally launch ModNight');
+      } else if (currentStep < totalSteps - 1) {
+        currentStep++;
+        updateSteps();
+        updatePanels();
+        updateButtons();
+      }
+    }
+
+    function goBack() {
+      if (currentStep > 0 && currentStep < totalSteps - 1) {
+        currentStep--;
+        updateSteps();
+        updatePanels();
+        updateButtons();
+      }
+    }
+
+    // Event listeners
+    btnNext.addEventListener('click', goNext);
+    btnBack.addEventListener('click', goBack);
+    acceptLicense.addEventListener('change', updateButtons);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !btnNext.disabled) {
+        goNext();
+      } else if (e.key === 'Escape' && currentStep > 0 && currentStep < totalSteps - 1) {
+        goBack();
+      }
+    });
+
+    // Initialize
+    updateButtons();
+    
+    // Load config from Tauri backend
+    async function loadConfig() {
+      try {
+        const { invoke } = window.__TAURI__.core;
+        const config = await invoke('get_config');
+        
+        // Update UI with config values
+        document.querySelector('h2').textContent = `Welcome to ${config.tool.name.charAt(0).toUpperCase() + config.tool.name.slice(1)}`;
+        document.querySelector('.subtitle').textContent = `This will install ${config.tool.name} on your computer.`;
+        
+        // Update license text
+        const licenseBox = document.querySelector('.license-box');
+        if (licenseBox) {
+          licenseBox.textContent = config.license.text;
+        }
+        
+        // Get default install path
+        const defaultPath = await invoke('get_default_path', { toolName: config.tool.name });
+        const installPathInput = document.getElementById('installPath');
+        if (installPathInput) {
+          installPathInput.value = defaultPath;
+        }
+        
+        // Store config for later use
+        window.installerConfig = config;
+        window.installPath = defaultPath;
+        
+        console.log('Config loaded:', config);
+      } catch (error) {
+        console.error('Failed to load config:', error);
+      }
+    }
+    
+    // Load config on page load
+    loadConfig();
+    
+    // Listen for install progress events
+    const { listen } = window.__TAURI__.event;
+    listen('install-progress', (event) => {
+      const progress = event.payload;
+      document.getElementById('progressFill').style.width = progress.percent + '%';
+      document.getElementById('progressPercent').textContent = Math.round(progress.percent) + '%';
+      document.getElementById('progressFile').textContent = 'Copying: ' + progress.current_file;
+      document.getElementById('filesCopied').textContent = progress.files_copied;
+      document.getElementById('currentSpeed').textContent = Math.round(progress.speed_mbps);
+    });
+    
+    listen('install-complete', (event) => {
+      const result = event.payload;
+      console.log('Installation complete:', result);
+      isInstalling = false;
+      
+      setTimeout(() => {
+        currentStep++;
+        updateSteps();
+        updatePanels();
+        updateButtons();
+      }, 500);
+    });
+    
+    // Modified install function using Tauri
+    async function startTauriInstall() {
+      const { invoke } = window.__TAURI__.core;
+      try {
+        const result = await invoke('start_install', {
+          installPath: window.installPath,
+          toolName: window.installerConfig.tool.name
+        });
+        console.log('Install result:', result);
+      } catch (error) {
+        console.error('Install failed:', error);
+        alert('Installation failed: ' + error);
+        isInstalling = false;
+      }
+    }
+    
+    // Override simulate installation with Tauri call
+    const originalSimulate = simulateInstallation;
+    simulateInstallation = function() {
+      if (isInstalling) return;
+      isInstalling = true;
+      startTauriInstall();
+    };
+    
+    // Browse button - use Tauri dialog
+    document.getElementById('btnBrowse').addEventListener('click', async () => {
+      const { invoke } = window.__TAURI__.core;
+      try {
+        const selectedPath = await invoke('select_install_path');
+        document.getElementById('installPath').value = selectedPath;
+        window.installPath = selectedPath;
+      } catch (error) {
+        console.error('Failed to select folder:', error);
+      }
+    });
+  </script>
+</body>
+</html>

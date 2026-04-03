@@ -1,0 +1,36 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .breathe {
+        animation: breathe 3s ease-in-out infinite;
+      }
+      @keyframes breathe {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="32" height="32" rx="4" fill="#0B0B0C"/>
+
+  <g class="breathe" stroke="#FFFFFF" stroke-width="0.7" fill="none">
+    <!-- Isometric cube -->
+    <!-- Top face -->
+    <polygon points="16,4 26,9.5 16,15 6,9.5" />
+    <!-- Left face -->
+    <polygon points="6,9.5 16,15 16,27 6,21.5" />
+    <!-- Right face -->
+    <polygon points="26,9.5 16,15 16,27 26,21.5" />
+
+    <!-- Network lines from center node -->
+    <line x1="16" y1="15" x2="10" y2="20"/>
+    <line x1="16" y1="15" x2="22" y2="20"/>
+    <line x1="16" y1="15" x2="16" y2="27"/>
+  </g>
+
+  <!-- Nodes -->
+  <circle cx="16" cy="15" r="1.8" fill="#FFFFFF" class="breathe"/>
+  <circle cx="10" cy="20" r="1.4" fill="#FFFFFF" class="breathe"/>
+  <circle cx="22" cy="20" r="1.4" fill="#FFFFFF" class="breathe"/>
+</svg>
