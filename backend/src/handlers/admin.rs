@@ -642,6 +642,38 @@ pub async fn delete_plugin(
 }
 
 #[derive(serde::Deserialize)]
+pub struct FreezeRequest {
+    pub frozen: bool,
+}
+
+pub async fn freeze_plugin(
+    State(db): State<SqlitePool>,
+    axum::extract::Path(id): axum::extract::Path<String>,
+    Json(payload): Json<FreezeRequest>,
+) -> Result<Json<crate::models::ApiResponse<()>>, StatusCode> {
+    let result = sqlx::query("UPDATE plugins SET is_frozen = ? WHERE id = ?")
+        .bind(payload.frozen)
+        .bind(&id)
+        .execute(&db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if result.rows_affected() == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(Json(crate::models::ApiResponse {
+        data: (),
+        success: true,
+        message: Some(if payload.frozen {
+            "Plugin frozen".to_string()
+        } else {
+            "Plugin unfrozen".to_string()
+        }),
+    }))
+}
+
+#[derive(serde::Deserialize)]
 pub struct SettingRequest {
     pub key: String,
     pub value: String,
@@ -683,4 +715,88 @@ pub async fn update_setting(
         })),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
+}
+
+#[derive(serde::Serialize, sqlx::FromRow)]
+pub struct PluginReport {
+    pub id: String,
+    pub plugin_id: String,
+    pub reason: String,
+    pub created_at: String,
+}
+
+pub async fn list_reports(
+    State(db): State<SqlitePool>,
+) -> Result<Json<crate::models::ApiResponse<Vec<PluginReport>>>, StatusCode> {
+    let reports: Vec<PluginReport> = sqlx::query_as(
+        "SELECT id, plugin_id, reason, CAST(created_at AS TEXT) as created_at FROM plugin_reports ORDER BY created_at DESC"
+    )
+    .fetch_all(&db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(crate::models::ApiResponse {
+        data: reports,
+        success: true,
+        message: None,
+    }))
+}
+
+#[derive(serde::Serialize, sqlx::FromRow)]
+pub struct CreatorApplication {
+    pub id: String,
+    pub email: String,
+    pub github: String,
+    pub status: String,
+    pub created_at: String,
+}
+
+pub async fn list_applications(
+    State(db): State<SqlitePool>,
+) -> Result<Json<crate::models::ApiResponse<Vec<CreatorApplication>>>, StatusCode> {
+    let apps: Vec<CreatorApplication> = sqlx::query_as(
+        "SELECT id, email, github, status, CAST(created_at AS TEXT) as created_at FROM creator_applications ORDER BY created_at DESC"
+    )
+    .fetch_all(&db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(crate::models::ApiResponse {
+        data: apps,
+        success: true,
+        message: None,
+    }))
+}
+
+#[derive(serde::Deserialize)]
+pub struct ApplicationStatusRequest {
+    pub status: String,
+}
+
+pub async fn update_application(
+    State(db): State<SqlitePool>,
+    axum::extract::Path(id): axum::extract::Path<String>,
+    Json(payload): Json<ApplicationStatusRequest>,
+) -> Result<Json<crate::models::ApiResponse<()>>, StatusCode> {
+    let allowed = ["approved", "rejected", "pending"];
+    if !allowed.contains(&payload.status.as_str()) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let result = sqlx::query("UPDATE creator_applications SET status = ? WHERE id = ?")
+        .bind(&payload.status)
+        .bind(&id)
+        .execute(&db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if result.rows_affected() == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(Json(crate::models::ApiResponse {
+        data: (),
+        success: true,
+        message: Some(format!("Application {}", payload.status)),
+    }))
 }

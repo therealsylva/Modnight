@@ -20,6 +20,7 @@ export interface Plugin {
   last_updated: string;
   created_at: string;
   updated_at: string;
+  is_frozen?: boolean;
 }
 
 export type PluginCategory = string;

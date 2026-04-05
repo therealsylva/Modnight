@@ -18,13 +18,22 @@ pub async fn init_db() -> Result<Db> {
 }
 
 async fn run_migrations(pool: &Db) -> Result<()> {
-    // First, add slug column if it doesn't exist (for existing databases)
+    // Add slug column if it doesn't exist (for existing databases)
     let add_slug = sqlx::query("ALTER TABLE plugins ADD COLUMN slug TEXT")
         .execute(pool)
         .await;
     
     if add_slug.is_ok() {
         tracing::info!("Added slug column to plugins table");
+    }
+
+    // Add is_frozen column if it doesn't exist
+    let add_frozen = sqlx::query("ALTER TABLE plugins ADD COLUMN is_frozen BOOLEAN NOT NULL DEFAULT 0")
+        .execute(pool)
+        .await;
+
+    if add_frozen.is_ok() {
+        tracing::info!("Added is_frozen column to plugins table");
     }
 
     sqlx::query(
@@ -47,12 +56,29 @@ async fn run_migrations(pool: &Db) -> Result<()> {
             file_path TEXT,
             changelog TEXT DEFAULT '',
             installation_instructions TEXT DEFAULT '',
+            is_frozen BOOLEAN NOT NULL DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         
         CREATE INDEX IF NOT EXISTS idx_plugins_slug ON plugins(slug);
         CREATE INDEX IF NOT EXISTS idx_plugins_category ON plugins(category);
+
+        CREATE TABLE IF NOT EXISTS plugin_reports (
+            id TEXT PRIMARY KEY,
+            plugin_id TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS creator_applications (
+            id TEXT PRIMARY KEY,
+            email TEXT NOT NULL,
+            github TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
         "#,
     )
     .execute(pool)

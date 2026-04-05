@@ -98,7 +98,50 @@ pub struct UpdateOptions {
     pub images: Option<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct PluginReport {
+    pub id: String,
+    pub plugin_id: String,
+    pub reason: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreatorApplication {
+    pub id: String,
+    pub email: String,
+    pub github: String,
+    pub status: String,
+    pub created_at: String,
+}
+
 impl ApiClient {
+    pub async fn freeze_plugin(&self, id: &str, frozen: bool) -> Result<()> {
+        #[derive(serde::Serialize)]
+        struct FreezeRequest { frozen: bool }
+        let path = format!("/api/admin/plugins/{}/freeze", id);
+        let _: ApiResponse<serde_json::Value> = self.post(&path, FreezeRequest { frozen }).await?;
+        Ok(())
+    }
+
+    pub async fn list_reports(&self) -> Result<Vec<PluginReport>> {
+        let response: ApiResponse<Vec<PluginReport>> = self.get("/api/admin/reports").await?;
+        Ok(response.data)
+    }
+
+    pub async fn list_applications(&self) -> Result<Vec<CreatorApplication>> {
+        let response: ApiResponse<Vec<CreatorApplication>> = self.get("/api/admin/creators").await?;
+        Ok(response.data)
+    }
+
+    pub async fn update_application(&self, id: &str, status: &str) -> Result<()> {
+        #[derive(serde::Serialize)]
+        struct StatusRequest { status: String }
+        let path = format!("/api/admin/creators/{}", id);
+        let _: ApiResponse<serde_json::Value> = self.post(&path, StatusRequest { status: status.to_string() }).await?;
+        Ok(())
+    }
+
     pub async fn list_plugins(&self, category: Option<&str>) -> Result<Vec<Plugin>> {
         let mut path = "/api/plugins?limit=100".to_string();
         if let Some(cat) = category {

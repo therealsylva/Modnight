@@ -2,16 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Command, Menu, X } from 'lucide-react';
+import { Search, Command, Menu, X, ShoppingCart, Palette } from 'lucide-react';
 import { useApp } from './AppContext';
 import { useCart } from './CartContext';
-import { ShoppingCart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function CommandCenter() {
-  const { searchQuery, setSearchQuery, isMobileMenuOpen, setIsMobileMenuOpen } = useApp();
+  const { searchQuery, setSearchQuery, isMobileMenuOpen, setIsMobileMenuOpen, setActiveNav } = useApp();
   const { itemCount, toggleCart } = useCart();
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,7 +30,8 @@ export default function CommandCenter() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setSearchQuery]);
 
-  const handleNavClick = () => {
+  const handleNavClick = (nav?: 'home' | 'trending') => {
+    if (nav) setActiveNav(nav);
     setIsMobileMenuOpen(false);
   };
 
@@ -129,7 +131,7 @@ export default function CommandCenter() {
               </div>
               <div className="flex-1 flex flex-col gap-1 px-2">
                 <button
-                  onClick={handleNavClick}
+                  onClick={() => handleNavClick('home')}
                   className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,13 +140,34 @@ export default function CommandCenter() {
                   <span className="font-medium text-sm">Home</span>
                 </button>
                 <button
-                  onClick={handleNavClick}
+                  onClick={() => handleNavClick('trending')}
                   className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                   </svg>
                   <span className="font-medium text-sm">Trending</span>
+                </button>
+                <button
+                  onClick={() => { toggleCart(); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                >
+                  <div className="relative">
+                    <ShoppingCart className="w-5 h-5" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 bg-foreground text-background text-[10px] font-bold flex items-center justify-center rounded-full">
+                        {itemCount > 99 ? '99+' : itemCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium text-sm">Queue{itemCount > 0 ? ` (${itemCount})` : ''}</span>
+                </button>
+                <button
+                  onClick={() => { router.push('/become-a-creator'); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                >
+                  <Palette className="w-5 h-5" />
+                  <span className="font-medium text-sm">Become a Creator</span>
                 </button>
               </div>
             </nav>

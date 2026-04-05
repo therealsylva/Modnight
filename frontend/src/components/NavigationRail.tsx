@@ -1,8 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, TrendingUp, ShoppingCart } from 'lucide-react';
+import { Home, TrendingUp, ShoppingCart, Palette } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { useApp } from './AppContext';
 
@@ -17,6 +18,7 @@ export default function NavigationRail() {
   const { activeNav, setActiveNav } = useApp();
   const { itemCount, toggleCart } = useCart();
   const [isExpanded, setIsExpanded] = useState(false);
+  const router = useRouter();
 
   const navItems: NavItem[] = [
     { 
@@ -137,7 +139,31 @@ export default function NavigationRail() {
               )}
             </AnimatePresence>
           </motion.button>
+
+          <motion.button
+            onClick={() => router.push('/become-a-creator')}
+            className="relative flex items-center gap-3 px-4 py-3 transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
+            whileHover={{ x: 2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Palette className="w-5 h-5 flex-shrink-0" />
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  className="font-medium text-sm whitespace-nowrap"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  Become a Creator
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </div>
+
+
       </nav>
     </motion.div>
   );

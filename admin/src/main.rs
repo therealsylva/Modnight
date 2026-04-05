@@ -5,7 +5,7 @@ mod config;
 mod repl;
 
 use clap::Parser;
-use cli::{Cli, Commands, PluginCommands, SettingsCommands, ConfigCommands};
+use cli::{Cli, Commands, PluginCommands, SettingsCommands, ConfigCommands, ReportsCommands, ApplicationsCommands};
 use config::Config;
 
 #[tokio::main]
@@ -39,6 +39,28 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::Repl => {
             repl::run(&config).await?;
+        }
+        Commands::Reports { command } => {
+            let client = api::ApiClient::new(&config)?;
+            match command {
+                ReportsCommands::List => {
+                    commands::list_reports(&client).await?;
+                }
+            }
+        }
+        Commands::Applications { command } => {
+            let client = api::ApiClient::new(&config)?;
+            match command {
+                ApplicationsCommands::List => {
+                    commands::list_applications(&client).await?;
+                }
+                ApplicationsCommands::Approve { id } => {
+                    commands::approve_application(&client, &id).await?;
+                }
+                ApplicationsCommands::Reject { id } => {
+                    commands::reject_application(&client, &id).await?;
+                }
+            }
         }
     }
     
@@ -115,6 +137,9 @@ async fn handle_plugin_command(client: api::ApiClient, command: PluginCommands) 
         }
         PluginCommands::UploadInteractive => {
             commands::upload_plugin_interactive(&client).await?;
+        }
+        PluginCommands::Freeze { id, unfreeze } => {
+            commands::freeze_plugin(&client, &id, unfreeze).await?;
         }
     }
     Ok(())

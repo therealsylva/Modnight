@@ -37,7 +37,18 @@ export default function DonateModal({ isOpen, onClose, pluginTitle }: DonateModa
   }, [isOpen]);
 
   const copyToClipboard = async (key: string, address: string) => {
-    await navigator.clipboard.writeText(address);
+    try {
+      await navigator.clipboard.writeText(address);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = address;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
   };

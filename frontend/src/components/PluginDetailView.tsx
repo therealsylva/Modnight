@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Heart, Share2, ChevronLeft, ChevronRight, ChevronDown, GitBranch, FileText, Clock, Package, Check, X, Play, ArrowRight } from 'lucide-react';
+import { Download, Heart, Share2, ChevronLeft, ChevronRight, ChevronDown, GitBranch, FileText, Clock, Package, Check, X, Play, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { Plugin } from '@/types';
 import { api } from '@/lib/api';
@@ -30,6 +30,9 @@ export default function PluginDetailView({
   const [showDonate, setShowDonate] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [reportReason, setReportReason] = useState('');
   const [relatedPlugins, setRelatedPlugins] = useState<Plugin[]>(initialRelated);
 
   const images = plugin.images.length > 0 ? plugin.images : [plugin.thumbnail];
@@ -77,7 +80,7 @@ export default function PluginDetailView({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <div className="fixed top-20 left-20 z-50">
+        <div className="fixed top-20 left-4 md:left-20 z-50">
           <button
             onClick={onClose}
             className="flex items-center gap-2 px-4 py-2 bg-card border border-border text-sm text-foreground hover:border-foreground/30 transition-colors"
@@ -87,9 +90,9 @@ export default function PluginDetailView({
           </button>
         </div>
 
-        <div className="pt-20 pl-20 pr-6 min-h-screen">
-          <div className="max-w-6xl mx-auto p-6 space-y-6">
-            <div className="flex gap-6">
+        <div className="pt-20 md:pl-20 px-4 md:px-6 min-h-screen">
+          <div className="max-w-6xl mx-auto p-2 md:p-6 space-y-6">
+            <div className="flex flex-col md:flex-row gap-6">
               <motion.div
                 className="flex-1"
                 initial={{ opacity: 0, x: -20 }}
@@ -261,7 +264,7 @@ export default function PluginDetailView({
               </motion.div>
 
               <motion.div
-                className="w-80 space-y-4"
+                className="w-full md:w-80 space-y-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
@@ -295,17 +298,26 @@ export default function PluginDetailView({
                 </div>
 
                 <div className="bg-card border border-border p-4 space-y-3">
-                  <motion.button
-                    onClick={handleDownload}
-                    className="w-full py-3 text-sm font-medium text-foreground bg-primary border border-border hover:border-foreground/30 transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Download className="w-4 h-4" />
-                      Download
+                  {plugin.is_frozen ? (
+                    <div className="w-full py-3 text-sm font-medium text-muted-foreground bg-muted/40 border border-border cursor-not-allowed select-none">
+                      <div className="flex items-center justify-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-yellow-500/70" />
+                        <span className="text-yellow-500/70">Under Investigation</span>
+                      </div>
                     </div>
-                  </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={handleDownload}
+                      className="w-full py-3 text-sm font-medium text-foreground bg-primary border border-border hover:border-foreground/30 transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Download className="w-4 h-4" />
+                        Download
+                      </div>
+                    </motion.button>
+                  )}
 
                   {plugin.preview_video && (
                     <motion.button
@@ -333,13 +345,23 @@ export default function PluginDetailView({
                     </div>
                   </motion.button>
 
-                  <button 
+                  <button
                     onClick={() => setShowShare(true)}
                     className="w-full py-3 text-sm font-medium text-muted-foreground bg-card border border-border hover:text-foreground transition-colors"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <Share2 className="w-4 h-4" />
                       Share
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setShowReport(true)}
+                    className="w-full py-3 text-sm font-medium text-muted-foreground bg-card border border-border hover:text-red-400 hover:border-red-400/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Flag className="w-4 h-4" />
+                      Report
                     </div>
                   </button>
                 </div>
@@ -455,6 +477,80 @@ export default function PluginDetailView({
         pluginSlug={plugin.slug}
         pluginTitle={plugin.title}
       />
+
+      <AnimatePresence>
+        {showReport && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => { setShowReport(false); setReportSubmitted(false); setReportReason(''); }}
+          >
+            <motion.div
+              className="bg-card border border-border w-full max-w-md p-6 space-y-4"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {reportSubmitted ? (
+                <div className="text-center py-4 space-y-3">
+                  <Check className="w-10 h-10 text-green-500 mx-auto" />
+                  <p className="text-sm font-medium text-foreground">Report submitted</p>
+                  <p className="text-xs text-muted-foreground">Thanks for helping keep the community safe. Our team will review this plugin.</p>
+                  <button
+                    onClick={() => { setShowReport(false); setReportSubmitted(false); setReportReason(''); }}
+                    className="mt-2 px-4 py-2 text-sm border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Flag className="w-4 h-4 text-red-400" />
+                      <h3 className="text-sm font-medium text-foreground">Report Plugin</h3>
+                    </div>
+                    <button onClick={() => setShowReport(false)} className="text-muted-foreground hover:text-foreground">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Why are you reporting <span className="text-foreground">{plugin.title}</span>?</p>
+                  <div className="space-y-2">
+                    {['Malware / malicious code', 'Copyright infringement', 'Misleading description', 'Broken / non-functional', 'Other'].map((reason) => (
+                      <button
+                        key={reason}
+                        onClick={() => setReportReason(reason)}
+                        className={`w-full text-left px-3 py-2 text-sm border transition-colors ${
+                          reportReason === reason
+                            ? 'border-red-400/50 text-foreground bg-red-400/5'
+                            : 'border-border text-muted-foreground hover:text-foreground hover:border-border/60'
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    disabled={!reportReason}
+                    onClick={async () => {
+                      try {
+                        await api.plugins.report(plugin.id, reportReason);
+                      } catch (_) {}
+                      setReportSubmitted(true);
+                    }}
+                    className="w-full py-2.5 text-sm font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-red-400/50 text-red-400 hover:bg-red-400/10"
+                  >
+                    Submit Report
+                  </button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

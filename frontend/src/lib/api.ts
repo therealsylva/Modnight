@@ -83,6 +83,20 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ plugin_ids: ids }),
       }),
+
+    report: (id: string, reason: string) =>
+      fetchApi<ApiResponse<void>>(`/plugins/${id}/report`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+  },
+
+  creators: {
+    apply: (email: string, github: string) =>
+      fetchApi<ApiResponse<void>>('/creators/apply', {
+        method: 'POST',
+        body: JSON.stringify({ email, github }),
+      }),
   },
 
   settings: {

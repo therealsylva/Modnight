@@ -35,8 +35,18 @@ pub enum Commands {
         #[command(subcommand)]
         command: ConfigCommands,
     },
-    
+
     Repl,
+
+    Reports {
+        #[command(subcommand)]
+        command: ReportsCommands,
+    },
+
+    Applications {
+        #[command(subcommand)]
+        command: ApplicationsCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -103,6 +113,25 @@ pub enum PluginCommands {
     
     #[command(name = "upload-interactive")]
     UploadInteractive,
+
+    Freeze {
+        id: String,
+        /// Pass --unfreeze to lift the freeze
+        #[arg(long)]
+        unfreeze: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ReportsCommands {
+    List,
+}
+
+#[derive(Subcommand)]
+pub enum ApplicationsCommands {
+    List,
+    Approve { id: String },
+    Reject { id: String },
 }
 
 #[derive(Subcommand)]

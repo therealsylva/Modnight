@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Us - NightWood",
-  description: "Learn about NightWood, the team behind ModNight marketplace for plugins, mods, and add-ons.",
+  title: "About Us - NightWood | ModNight",
+  description: "Learn about NightWood, the team behind ModNight — the marketplace for plugins, mods, and add-ons.",
 };
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 pt-28 md:pt-20 md:pl-24 pb-12 max-w-4xl">
       <h1 className="text-4xl font-bold mb-6">About NightWood</h1>
-      
+
       <div className="prose prose-invert max-w-none">
         <p className="text-lg text-muted-foreground mb-8">
-          NightWood is a software development studio dedicated to building tools that enhance 
-          your digital experience. We believe in the power of customization and community-driven 
+          NightWood is a software development studio dedicated to building tools that enhance
+          your digital experience. We believe in the power of customization and community-driven
           innovation.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">Our Mission</h2>
         <p className="text-muted-foreground mb-4">
-          We aim to create the best marketplace for developers and users to discover, share, 
-          and distribute plugins, mods, and add-ons. Our platform empowers creators while 
+          We aim to create the best marketplace for developers and users to discover, share,
+          and distribute plugins, mods, and add-ons. Our platform empowers creators while
           making it easy for users to find high-quality modifications for their favorite applications.
         </p>
 

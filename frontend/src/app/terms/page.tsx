@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - NightWood",
-  description: "NightWood's terms of service - the rules and guidelines for using ModNight.",
+  title: "Terms of Service - ModNight | NightWood",
+  description: "ModNight's terms of service — the rules and guidelines for using the ModNight marketplace by NightWood.",
 };
 
 export default function TermsPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 pt-28 md:pt-20 md:pl-24 pb-12 max-w-4xl">
       <h1 className="text-4xl font-bold mb-6">Terms of Service</h1>
-      
+
       <p className="text-muted-foreground mb-8">
         Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
       </p>
@@ -18,8 +18,8 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Agreement to Terms</h2>
           <p className="text-muted-foreground">
-            By accessing and using NightWood&apos;s services, including ModNight, you agree to be bound 
-            by these Terms of Service. If you disagree with any part of these terms, you may not 
+            By accessing and using NightWood&apos;s services, including ModNight, you agree to be bound
+            by these Terms of Service. If you disagree with any part of these terms, you may not
             access our services.
           </p>
         </section>
@@ -27,7 +27,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Use License</h2>
           <p className="text-muted-foreground">
-            Permission is granted to temporarily use ModNight for personal, non-commercial use only. 
+            Permission is granted to temporarily use ModNight for personal, non-commercial use only.
             This is the grant of a license, not a transfer of title.
           </p>
         </section>
@@ -61,8 +61,8 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Disclaimer</h2>
           <p className="text-muted-foreground">
-            ModNight is provided &quot;as is&quot; without any representations or warranties, express or implied. 
-            NightWood makes no representations or warranties in relation to this website or the 
+            ModNight is provided &quot;as is&quot; without any representations or warranties, express or implied.
+            NightWood makes no representations or warranties in relation to this website or the
             information and materials provided on this website.
           </p>
         </section>
@@ -70,7 +70,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Limitation of Liability</h2>
           <p className="text-muted-foreground">
-            NightWood will not be liable to you in relation to the contents of, or use of, 
+            NightWood will not be liable to you in relation to the contents of, or use of,
             or otherwise in connection with, this website.
           </p>
         </section>

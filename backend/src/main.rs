@@ -39,6 +39,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/plugins", post(handlers::admin::create_plugin))
         .route("/plugins/:id", put(handlers::admin::update_plugin))
         .route("/plugins/:id", delete(handlers::admin::delete_plugin))
+        .route("/plugins/:id/freeze", post(handlers::admin::freeze_plugin))
+        .route("/reports", get(handlers::admin::list_reports))
+        .route("/creators", get(handlers::admin::list_applications))
+        .route("/creators/:id", post(handlers::admin::update_application))
         .route("/settings", post(handlers::admin::update_setting))
         .route_layer(axum_middleware::from_fn(middleware::admin_auth_middleware));
 
@@ -52,6 +56,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/plugins/:id/like", post(handlers::plugins::like_plugin))
         .route("/api/plugins/:id/likes", get(handlers::plugins::get_likes))
         .route("/api/plugins/batch-download", post(handlers::plugins::batch_download))
+        .route("/api/plugins/:id/report", post(handlers::plugins::report_plugin))
+        .route("/api/creators/apply", post(handlers::creators::apply_creator))
         .route("/api/feed/live", get(handlers::feed::get_live_feed))
         .route("/api/categories", get(handlers::categories::get_categories))
         .route("/api/settings/donate", get(handlers::settings::get_donate_settings))

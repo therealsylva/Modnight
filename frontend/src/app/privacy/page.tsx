@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - NightWood",
-  description: "NightWood's privacy policy - how we collect, use, and protect your data.",
+  title: "Privacy Policy - ModNight | NightWood",
+  description: "ModNight's privacy policy — how NightWood collects, uses, and protects your data.",
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 pt-28 md:pt-20 md:pl-24 pb-12 max-w-4xl">
       <h1 className="text-4xl font-bold mb-6">Privacy Policy</h1>
-      
+
       <p className="text-muted-foreground mb-8">
         Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
       </p>
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
           <p className="text-muted-foreground">
-            NightWood (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) operates ModNight. This Privacy Policy explains how we collect, 
+            NightWood (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) operates ModNight. This Privacy Policy explains how we collect,
             use, disclose, and safeguard your information when you use our website and services.
           </p>
         </section>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Data Security</h2>
           <p className="text-muted-foreground">
-            We implement appropriate technical and organizational security measures to protect 
+            We implement appropriate technical and organizational security measures to protect
             your personal information against unauthorized access, alteration, disclosure, or destruction.
           </p>
         </section>

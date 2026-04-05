@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="border-t border-border/40 bg-[#0a0a0a] mt-auto w-full">
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 md:pl-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="min-w-0">
             <h3 className="font-semibold mb-3 whitespace-nowrap">Marketplace</h3>

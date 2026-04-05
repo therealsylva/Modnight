@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import PluginClient from './client';
+import JsonLd from '@/components/JsonLd';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -23,7 +24,7 @@ interface PluginData {
 
 async function getPlugin(slug: string): Promise<PluginData | null> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
-  
+
   try {
     const res = await fetch(`${apiUrl}/plugins/slug/${slug}`, { cache: 'no-store' });
     if (res.ok) {
@@ -31,7 +32,7 @@ async function getPlugin(slug: string): Promise<PluginData | null> {
       return data.data;
     }
   } catch {}
-  
+
   try {
     const res = await fetch(`${apiUrl}/plugins/${slug}`, { cache: 'no-store' });
     if (res.ok) {
@@ -39,7 +40,7 @@ async function getPlugin(slug: string): Promise<PluginData | null> {
       return data.data;
     }
   } catch {}
-  
+
   return null;
 }
 
@@ -49,23 +50,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (plugin) {
     const pluginUrl = `${SITE_URL}/plugin/${plugin.slug || plugin.id}`;
-    const downloadUrl = `${SITE_URL}/api/download/${plugin.id}`;
-    
-    const schemaOrg = {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": plugin.title,
-      "description": plugin.description?.slice(0, 160),
-      "author": {
-        "@type": "Person",
-        "name": plugin.author
-      },
-      "dateModified": plugin.updated_at,
-      "version": plugin.version,
-      "operatingSystem": plugin.compatibility,
-      "downloadUrl": downloadUrl,
-      "applicationCategory": "DeveloperApplication"
-    };
 
     return {
       title: `${plugin.title} by ${plugin.author} - ModNight`,
@@ -89,12 +73,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   }
-  
+
   return {
     title: 'Plugin Not Found - ModNight',
   };
 }
 
-export default function PluginPage({ params }: Props) {
-  return <PluginClient params={params} />;
+export default async function PluginPage({ params }: Props) {
+  const { slug } = await params;
+  const plugin = await getPlugin(slug);
+
+  const jsonLd = plugin ? {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": plugin.title,
+    "description": plugin.description?.slice(0, 160),
+    "author": {
+      "@type": "Person",
+      "name": plugin.author
+    },
+    "dateModified": plugin.updated_at,
+    "version": plugin.version,
+    "operatingSystem": plugin.compatibility,
+    "downloadUrl": `${SITE_URL}/api/download/${plugin.id}`,
+    "applicationCategory": "DeveloperApplication"
+  } : null;
+
+  return (
+    <>
+      {jsonLd && <JsonLd data={jsonLd} />}
+      <PluginClient params={params} />
+    </>
+  );
 }

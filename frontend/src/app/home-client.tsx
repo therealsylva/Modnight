@@ -2,14 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import NavigationRail from '@/components/NavigationRail';
-import CommandCenter from '@/components/CommandCenter';
 import ModGrid from '@/components/ModGrid';
 import PluginDetailView from '@/components/PluginDetailView';
-import CartPanel from '@/components/CartPanel';
 import AnnouncementModal from '@/components/AnnouncementModal';
-import { CartProvider } from '@/components/CartContext';
-import { AppProvider, useApp } from '@/components/AppContext';
+import { useApp } from '@/components/AppContext';
 
 import { Flame, Star, Loader2 } from 'lucide-react';
 import { usePlugins, usePluginStats, useCategories } from '@/hooks/use-plugins';
@@ -29,21 +25,20 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
 
   const sortBy = activeNav === 'trending' ? 'likes' : 'downloads';
 
-  const { data: pluginsData, isLoading: pluginsLoading, error: pluginsError, data: livePlugins } = usePlugins({
+  const { data: pluginsData, isLoading: pluginsLoading, error: pluginsError } = usePlugins({
     category: activeCategory,
     search: searchQuery || undefined,
     sort_by: sortBy,
     sort_order: 'desc',
-  }, { 
+  }, {
     fallbackData: { data: initialPlugins, total: initialPlugins.length, page: 1, per_page: 20, total_pages: 1 }
   });
 
-  const { data: statsData, refetch: refetchStats } = usePluginStats();
+  const { data: statsData } = usePluginStats();
   const { data: categoriesData } = useCategories();
 
   const stats = statsData?.data || initialStats;
   const categories = categoriesData?.data || initialCategories;
-
   const plugins = pluginsData?.data ?? initialPlugins;
 
   const handleDismissAnnouncement = () => {
@@ -63,27 +58,28 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <NavigationRail />
-      <CommandCenter />
-      
-      <main className="flex-1 pt-16 md:pt-16 md:pl-20 pb-8">
+      {/* pt-28 on mobile to account for header + search bar, md:pt-16 for desktop */}
+      <main className="flex-1 pt-28 md:pt-16 md:pl-20 pb-8">
         <div className="w-full p-4 md:p-6 space-y-8">
           <motion.div
-            className="bg-[#111112] border border-border p-6 w-full"
+            className="bg-[#111112] border border-border p-4 md:p-6 w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
+            {/* Title row - stacked on mobile, side by side on desktop */}
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-4">
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                   Discover Premium Plugins & Mods for Your Favorite Apps
                 </h1>
                 <p className="text-muted-foreground text-sm">
                   Browse thousands of high-quality add-ons, styled mods, and app plugins for gaming, productivity, and customization
                 </p>
               </div>
-              <div className="flex gap-6 text-center">
+
+              {/* Stats - row on mobile below title, row on desktop beside title */}
+              <div className="flex gap-6 md:text-right">
                 <div>
                   <div className="text-2xl font-bold text-foreground font-mono">
                     {stats?.total_plugins.toLocaleString() ?? 0}
@@ -99,11 +95,12 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/* Category filters - horizontal scroll on mobile */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
               <button
                 onClick={() => setActiveCategory('all')}
                 className={`
-                  flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all
+                  flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all
                   ${activeCategory === 'all'
                     ? 'bg-primary text-foreground border border-border'
                     : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -118,7 +115,7 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
                   className={`
-                    flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all
+                    flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all
                     ${activeCategory === category.id
                       ? 'bg-primary text-foreground border border-border'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -140,19 +137,19 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
             <div className="flex items-center gap-2 mb-4">
               <Flame className="w-5 h-5 text-foreground" />
               <h2 className="text-lg font-medium text-foreground">
-                {searchQuery 
-                  ? `Search results for "${searchQuery}"` 
-                  : activeNav === 'trending' 
-                    ? 'Trending Plugins' 
-                    : activeCategory === 'all' 
-                      ? 'All Plugins' 
+                {searchQuery
+                  ? `Search results for "${searchQuery}"`
+                  : activeNav === 'trending'
+                    ? 'Trending Plugins'
+                    : activeCategory === 'all'
+                      ? 'All Plugins'
                       : `${getFilterLabel(activeCategory)} Plugins`}
               </h2>
               <span className="text-sm text-muted-foreground ml-2">
                 {plugins.length} results
               </span>
             </div>
-            
+
             {pluginsLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -171,8 +168,6 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
           </motion.div>
         </div>
       </main>
-
-      <CartPanel />
 
       {selectedPlugin && (
         <PluginDetailView
@@ -196,14 +191,10 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
 
 export default function HomeClient({ initialPlugins, initialStats, initialCategories }: HomeClientProps) {
   return (
-    <AppProvider>
-      <CartProvider>
-        <HomePageContent 
-          initialPlugins={initialPlugins}
-          initialStats={initialStats}
-          initialCategories={initialCategories}
-        />
-      </CartProvider>
-    </AppProvider>
+    <HomePageContent
+      initialPlugins={initialPlugins}
+      initialStats={initialStats}
+      initialCategories={initialCategories}
+    />
   );
 }

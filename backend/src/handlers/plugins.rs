@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::models::{
     ApiResponse, PaginatedResponse, Plugin, PluginDependency, PluginFilters, PluginJson,
-    PluginStats, BatchDownloadRequest, BatchDownloadItem, PluginImage,
+    PluginStats, BatchDownloadRequest, BatchDownloadItem, PluginImage, ReportRequest,
 };
 
 pub async fn list_plugins(
@@ -406,5 +406,38 @@ pub async fn batch_download(
         data: items,
         success: true,
         message: Some(format!("{} plugins ready for download", count)),
+    }))
+}
+
+pub async fn report_plugin(
+    State(db): State<SqlitePool>,
+    Path(id): Path<String>,
+    Json(payload): Json<ReportRequest>,
+) -> Result<Json<ApiResponse<()>>, StatusCode> {
+    let exists: Option<(String,)> = sqlx::query_as("SELECT id FROM plugins WHERE id = ?")
+        .bind(&id)
+        .fetch_optional(&db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if exists.is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    let report_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        "INSERT INTO plugin_reports (id, plugin_id, reason, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+    )
+    .bind(&report_id)
+    .bind(&id)
+    .bind(&payload.reason)
+    .execute(&db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(ApiResponse {
+        data: (),
+        success: true,
+        message: Some("Report submitted".to_string()),
     }))
 }

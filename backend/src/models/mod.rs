@@ -21,6 +21,7 @@ pub struct Plugin {
     pub file_path: Option<String>,
     pub changelog: Option<String>,
     pub installation_instructions: Option<String>,
+    pub is_frozen: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -56,6 +57,7 @@ pub struct PluginJson {
     pub last_updated: String,
     pub created_at: String,
     pub updated_at: String,
+    pub is_frozen: bool,
 }
 
 impl From<Plugin> for PluginJson {
@@ -82,6 +84,7 @@ impl From<Plugin> for PluginJson {
             last_updated: format_ago(&plugin.updated_at),
             created_at: plugin.created_at.to_rfc3339(),
             updated_at: plugin.updated_at.to_rfc3339(),
+            is_frozen: plugin.is_frozen,
         }
     }
 }
@@ -210,6 +213,17 @@ pub struct AnnouncementSettings {
 #[derive(Debug, Clone, Deserialize)]
 pub struct BatchDownloadRequest {
     pub plugin_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReportRequest {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatorApplicationRequest {
+    pub email: String,
+    pub github: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

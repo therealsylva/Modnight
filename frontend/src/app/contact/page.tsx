@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Us - NightWood",
-  description: "Get in touch with NightWood. We'd love to hear from you about partnerships, support, or general inquiries.",
+  title: "Contact Us - NightWood | ModNight",
+  description: "Get in touch with NightWood, the team behind ModNight. We'd love to hear from you about partnerships, support, or general inquiries.",
 };
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 pt-28 md:pt-20 md:pl-24 pb-12 max-w-4xl">
       <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
-      
+
       <p className="text-lg text-muted-foreground mb-8">
-        We’d love to hear from you. Whether you have a question about our products, 
+        We'd love to hear from you. Whether you have a question about our products,
         want to partner with us, or just want to say hello, our team is here to help.
       </p>
 
@@ -20,8 +20,8 @@ export default function ContactPage() {
         <p className="text-muted-foreground mb-4">
           For all inquiries, please email us at:
         </p>
-        <a 
-          href="mailto:nightwood@modnight.com" 
+        <a
+          href="mailto:nightwood@modnight.com"
           className="text-2xl font-mono text-primary hover:underline"
         >
           nightwood@modnight.com
