@@ -52,6 +52,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/plugins/search", get(handlers::plugins::search_plugins))
         .route("/api/plugins/slug/:slug", get(handlers::plugins::get_plugin_by_slug))
         .route("/api/plugins/:id", get(handlers::plugins::get_plugin))
+        .route("/api/v1/plugin-details/:slug", get(handlers::plugins::get_plugin_details))
         .route("/api/plugins/:id/download", get(handlers::plugins::download_plugin))
         .route("/api/plugins/:id/like", post(handlers::plugins::like_plugin))
         .route("/api/plugins/:id/likes", get(handlers::plugins::get_likes))

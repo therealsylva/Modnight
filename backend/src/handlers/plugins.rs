@@ -281,6 +281,10 @@ pub async fn download_plugin(
 
     match plugin {
         Some(p) => {
+            if p.is_frozen {
+                return Err(StatusCode::FORBIDDEN);
+            }
+
             sqlx::query("UPDATE plugins SET downloads = downloads + 1 WHERE id = ?")
                 .bind(&id)
                 .execute(&db)
@@ -387,6 +391,10 @@ pub async fn batch_download(
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         if let Some(p) = plugin {
+            if p.is_frozen {
+                continue;
+            }
+
             sqlx::query("UPDATE plugins SET downloads = downloads + 1 WHERE id = ?")
                 .bind(&id)
                 .execute(&db)
@@ -439,5 +447,79 @@ pub async fn report_plugin(
         data: (),
         success: true,
         message: Some("Report submitted".to_string()),
+    }))
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct PluginDetailsResponse {
+    pub plugin: crate::models::PluginJson,
+    pub related: Vec<crate::models::PluginJson>,
+    pub likes: i64,
+}
+
+pub async fn get_plugin_details(
+    State(db): State<SqlitePool>,
+    Path(slug): Path<String>,
+) -> Result<Json<ApiResponse<PluginDetailsResponse>>, StatusCode> {
+    // Try slug first, then id
+    let plugin: Option<Plugin> = sqlx::query_as(
+        "SELECT * FROM plugins WHERE slug = ? OR id = ? LIMIT 1"
+    )
+    .bind(&slug)
+    .bind(&slug)
+    .fetch_optional(&db)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let plugin = match plugin {
+        Some(p) => p,
+        None => return Err(StatusCode::NOT_FOUND),
+    };
+
+    let dependencies: Vec<PluginDependency> =
+        sqlx::query_as("SELECT * FROM plugin_dependencies WHERE plugin_id = ?")
+            .bind(&plugin.id)
+            .fetch_all(&db)
+            .await
+            .unwrap_or_default();
+
+    let images: Vec<PluginImage> =
+        sqlx::query_as("SELECT * FROM plugin_images WHERE plugin_id = ? ORDER BY sort_order")
+            .bind(&plugin.id)
+            .fetch_all(&db)
+            .await
+            .unwrap_or_default();
+
+    let likes = plugin.likes;
+    let category = plugin.category.clone();
+    let plugin_id = plugin.id.clone();
+
+    let mut plugin_json = PluginJson::from(plugin);
+    plugin_json.dependencies = dependencies;
+    plugin_json.images = images.iter().map(|i| i.image_path.clone()).collect();
+
+    // Fetch related plugins in same category, excluding current
+    let related_plugins: Vec<Plugin> = sqlx::query_as(
+        "SELECT * FROM plugins WHERE category = ? AND id != ? ORDER BY downloads DESC LIMIT 4"
+    )
+    .bind(&category)
+    .bind(&plugin_id)
+    .fetch_all(&db)
+    .await
+    .unwrap_or_default();
+
+    let related_json: Vec<PluginJson> = related_plugins
+        .into_iter()
+        .map(|p| PluginJson::from(p))
+        .collect();
+
+    Ok(Json(ApiResponse {
+        data: PluginDetailsResponse {
+            plugin: plugin_json,
+            related: related_json,
+            likes,
+        },
+        success: true,
+        message: None,
     }))
 }
