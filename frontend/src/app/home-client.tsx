@@ -71,10 +71,10 @@ function HomePageContent({ initialPlugins, initialStats, initialCategories }: Ho
             <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-4">
               <div className="flex-1">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                  Discover Premium Plugins & Mods for Your Favorite Apps
+                  Free Plugins, Mods & PC Tools — All in One Place
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Browse thousands of high-quality add-ons, styled mods, and app plugins for gaming, productivity, and customization
+                  Download free plugins, mods, and standalone PC utilities. Gaming tools, system utilities, productivity add-ons — completely free, no account needed.
                 </p>
               </div>
 

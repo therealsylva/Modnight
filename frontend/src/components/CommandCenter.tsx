@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Command, Menu, X, ShoppingCart, Palette } from 'lucide-react';
+import { Search, Command, Menu, X, ShoppingCart, Palette, Newspaper } from 'lucide-react';
 import { useApp } from './AppContext';
 import { useCart } from './CartContext';
 import { useRouter } from 'next/navigation';
@@ -169,6 +169,13 @@ export default function CommandCenter() {
                   <Palette className="w-5 h-5" />
                   <span className="font-medium text-sm">Become a Creator</span>
                 </button>
+                <div className="flex items-center gap-3 px-4 py-3 text-muted-foreground/40 cursor-not-allowed">
+                  <Newspaper className="w-5 h-5" />
+                  <span className="font-medium text-sm">News & Updates</span>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 bg-muted border border-border text-muted-foreground ml-auto">
+                    soon
+                  </span>
+                </div>
               </div>
             </nav>
           </motion.div>

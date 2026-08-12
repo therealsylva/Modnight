@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Footer } from "@/components/Footer";
@@ -7,27 +7,29 @@ import NavigationRail from "@/components/NavigationRail";
 import CommandCenter from "@/components/CommandCenter";
 import CartPanel from "@/components/CartPanel";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "ModNight - Marketplace for Add-ons, Mods & Plugins",
-  description: "Discover and install high-quality add-ons, styled mods, and app plugins for your favorite games and productivity tools.",
-  keywords: ["mods", "plugins", "add-ons", "gaming", "productivity", "marketplace"],
+  title: "ModNight - Free Plugins, Mods & PC Tools",
+  description: "Download free plugins, mods, and standalone PC utilities. Gaming tools, system utilities, productivity add-ons — completely free, no account needed.",
+  keywords: ["free plugins", "free mods", "PC tools", "PC utilities", "gaming mods", "productivity plugins", "free add-ons"],
   authors: [{ name: "ModNight" }],
   icons: {
     icon: "/logo.svg",
   },
   openGraph: {
-    title: "ModNight - Add-ons, Mods & Plugins Marketplace",
-    description: "Discover premium add-ons, mods, and plugins for your favorite applications",
+    title: "ModNight - Free Plugins, Mods & PC Tools",
+    description: "Download free plugins, mods, and standalone PC utilities. Gaming tools, system utilities, productivity add-ons — completely free, no account needed.",
     type: "website",
     url: "https://modnight.com",
     siteName: "ModNight",
@@ -36,14 +38,14 @@ export const metadata: Metadata = {
         url: "https://modnight.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ModNight - Plugins & Mods Marketplace",
+        alt: "ModNight - Free Plugins, Mods & PC Tools",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ModNight",
-    description: "Add-ons, Mods & Plugins Marketplace",
+    title: "ModNight - Free Plugins, Mods & PC Tools",
+    description: "Download free plugins, mods, and standalone PC utilities — completely free, no account needed.",
     images: ["https://modnight.com/og-image.png"],
   },
 };
@@ -56,7 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark bg-background text-foreground`}
+        className={`${jakartaSans.variable} ${jetbrainsMono.variable} antialiased dark bg-background text-foreground`}
       >
         <Providers>
           <NavigationRail />
