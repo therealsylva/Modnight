@@ -35,6 +35,16 @@ export default function PluginDetailView({
   const [reportReason, setReportReason] = useState('');
   const [relatedPlugins, setRelatedPlugins] = useState<Plugin[]>(initialRelated);
 
+  useEffect(() => {
+    if (initialRelated.length === 0 && plugin.slug) {
+      api.plugins.getPluginDetails(plugin.slug).then(res => {
+        if (res.success && res.data.related?.length > 0) {
+          setRelatedPlugins(res.data.related);
+        }
+      }).catch(() => {});
+    }
+  }, [plugin.slug]);
+
   const images = plugin.images.length > 0 ? plugin.images : [plugin.thumbnail];
 
   const nextImage = () => {
@@ -148,7 +158,7 @@ export default function PluginDetailView({
                         ${currentImageIndex === idx ? 'border-foreground' : 'border-border hover:border-border/60'}
                       `}
                     >
-                      <img src={img} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`${plugin.title} screenshot ${idx + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -156,7 +166,7 @@ export default function PluginDetailView({
                 <div className="mt-8 space-y-8">
                   <section>
                     <h2 className="text-xl font-semibold text-foreground mb-3">About This Plugin</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                       {plugin.description}
                     </p>
                   </section>
@@ -214,7 +224,7 @@ export default function PluginDetailView({
                         className="bg-card border border-border p-6 space-y-4"
                       >
                         <h3 className="text-sm font-medium text-foreground mb-4">Installation Instructions</h3>
-                        <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        <div className="text-sm text-foreground whitespace-pre-wrap">
                           {plugin.installation_instructions || 'No installation instructions provided.'}
                         </div>
                       </motion.div>
@@ -234,7 +244,7 @@ export default function PluginDetailView({
                               <span className="text-xs font-mono text-muted-foreground">{plugin.version}</span>
                               <span className="text-xs text-muted-foreground">{plugin.last_updated}</span>
                             </div>
-                            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            <div className="text-sm text-foreground whitespace-pre-wrap">
                               {plugin.changelog || 'No changelog provided.'}
                             </div>
                           </div>
@@ -253,7 +263,7 @@ export default function PluginDetailView({
                         <div className="grid grid-cols-3 gap-4">
                           {images.map((img, idx) => (
                             <div key={idx} className="aspect-video bg-[#111112] border border-border overflow-hidden">
-                              <img src={img} alt={`Plugin image ${idx + 1}`} className="w-full h-full object-cover" />
+                              <img src={img} alt={`${plugin.title} screenshot ${idx + 1}`} className="w-full h-full object-cover" />
                             </div>
                           ))}
                         </div>

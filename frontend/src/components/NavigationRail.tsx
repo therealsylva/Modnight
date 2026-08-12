@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, TrendingUp, ShoppingCart, Palette } from 'lucide-react';
+import { Home, TrendingUp, ShoppingCart, Palette, Newspaper } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
@@ -161,6 +161,28 @@ export default function NavigationRail() {
               )}
             </AnimatePresence>
           </motion.button>
+
+          <motion.div
+            className="relative flex items-center gap-3 px-4 py-3 text-muted-foreground/50 cursor-not-allowed"
+          >
+            <Newspaper className="w-5 h-5 flex-shrink-0" />
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  className="flex items-center gap-2 whitespace-nowrap"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <span className="font-medium text-sm">News & Updates</span>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 bg-muted border border-border text-muted-foreground">
+                    soon
+                  </span>
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
 
 

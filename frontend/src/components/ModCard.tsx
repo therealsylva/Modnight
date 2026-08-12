@@ -23,6 +23,7 @@ export default function ModCard({ plugin, onClick }: ModCardProps) {
   };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (!inCart) {
       addToCart(plugin);
@@ -35,9 +36,10 @@ export default function ModCard({ plugin, onClick }: ModCardProps) {
   };
 
   return (
-    <motion.div
-      className="group relative cursor-pointer"
-      onClick={onClick}
+    <motion.a
+      href={`/plugin/${plugin.slug || plugin.id}`}
+      className="group relative cursor-pointer block"
+      onClick={(e) => { e.preventDefault(); onClick?.(); }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -46,7 +48,7 @@ export default function ModCard({ plugin, onClick }: ModCardProps) {
       onHoverEnd={() => setIsHovered(false)}
     >
       <div className={`
-        bg-card border border-border overflow-hidden transition-all duration-200
+        bg-card border border-border overflow-hidden transition-all duration-200 rounded-md
         ${isHovered ? 'border-foreground/20' : ''}
       `}>
         <div className="relative aspect-video bg-[#111112] overflow-hidden border-b border-border">
@@ -128,6 +130,6 @@ export default function ModCard({ plugin, onClick }: ModCardProps) {
           transition={{ duration: 0.2 }}
         />
       )}
-    </motion.div>
+    </motion.a>
   );
 }
