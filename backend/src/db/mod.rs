@@ -5,7 +5,7 @@ pub type Db = SqlitePool;
 
 pub async fn init_db() -> Result<Db> {
     let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:./data/stubbedseek.db".to_string());
+        .unwrap_or_else(|_| "sqlite:./data/modnight.db".to_string());
 
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
