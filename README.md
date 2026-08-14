@@ -8,8 +8,8 @@ Plugin marketplace for games and tools.
 modnight/
 ├── frontend/          # Next.js frontend
 ├── backend/           # Rust API backend
-├── admin/            # Rust admin CLI
-└── installer/        # Tauri installer
+├── admin/             # Rust admin CLI
+└── archive/installer/ # Archived Tauri desktop installer
 ```
 
 ## Quick Start
@@ -39,7 +39,7 @@ Runs on `http://localhost:3000`
 - **Frontend**: Next.js 16 + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend**: Rust + Axum + SQLx (SQLite)
 - **API**: RESTful JSON API
-- **Installer**: Tauri (desktop app)
+- **Desktop installer**: archived under `archive/installer/`
 
 ## API
 

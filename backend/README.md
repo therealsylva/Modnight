@@ -1,6 +1,6 @@
-# StubbedSeek Backend
+# ModNight Backend
 
-Rust backend API server for the StubbedSeek plugin marketplace.
+Rust backend API server for the ModNight plugin marketplace.
 
 ## Tech Stack
 
